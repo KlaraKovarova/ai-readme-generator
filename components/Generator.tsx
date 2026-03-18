@@ -20,6 +20,8 @@ function incrementUsage(): number {
 
 export default function Generator() {
   const [repoUrl, setRepoUrl] = useState("");
+  const [apiKey, setApiKey] = useState("");
+  const [showByok, setShowByok] = useState(false);
   const [readme, setReadme] = useState("");
   const [isDemo, setIsDemo] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -31,7 +33,7 @@ export default function Generator() {
     const target = (url ?? repoUrl).trim();
     if (!target) return;
     const currentUsage = getUsage();
-    if (currentUsage >= FREE_LIMIT) {
+    if (currentUsage >= FREE_LIMIT && !apiKey.trim()) {
       setShowUpgrade(true);
       return;
     }
@@ -42,10 +44,12 @@ export default function Generator() {
     setIsDemo(false);
 
     try {
+      const body: { repoUrl: string; apiKey?: string } = { repoUrl: target };
+      if (apiKey.trim()) body.apiKey = apiKey.trim();
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ repoUrl: target }),
+        body: JSON.stringify(body),
       });
       const data = await res.json() as { readme?: string; error?: string; demo?: boolean };
       if (!res.ok) throw new Error(data.error ?? "Generation failed");
@@ -167,7 +171,7 @@ export default function Generator() {
             {remaining > 0
               ? `${remaining} free generation${remaining !== 1 ? "s" : ""} remaining`
               : "Free limit reached — "}
-            {remaining === 0 && (
+            {remaining === 0 && !apiKey.trim() && (
               <button
                 onClick={() => setShowUpgrade(true)}
                 className="text-indigo-400 hover:text-indigo-300 underline underline-offset-2"
@@ -176,6 +180,35 @@ export default function Generator() {
               </button>
             )}
           </p>
+
+          {/* BYOK toggle */}
+          <div className="mt-4 border-t border-gray-800 pt-4">
+            <button
+              type="button"
+              onClick={() => setShowByok((v) => !v)}
+              className="text-xs text-gray-500 hover:text-gray-300 flex items-center gap-1.5 transition-colors"
+            >
+              <span className={`transition-transform ${showByok ? "rotate-90" : ""}`}>▶</span>
+              Use your own Anthropic API key
+            </button>
+
+            {showByok && (
+              <div className="mt-3 space-y-2">
+                <input
+                  type="password"
+                  value={apiKey}
+                  onChange={(e) => setApiKey(e.target.value)}
+                  placeholder="sk-ant-…"
+                  autoComplete="off"
+                  className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-gray-100 placeholder-gray-600 focus:outline-none focus:border-indigo-600 transition-colors text-sm font-mono"
+                />
+                <p className="text-xs text-gray-600 leading-relaxed">
+                  Your key is sent directly to the API for this request only — it is never logged, stored, or shared.
+                  Using your own key bypasses the free-generation limit.
+                </p>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Error */}
@@ -193,7 +226,7 @@ export default function Generator() {
                 <span className="text-sm font-medium text-gray-300">README.md</span>
                 {isDemo && (
                   <span className="text-xs bg-amber-900/60 text-amber-300 border border-amber-700/50 px-2 py-0.5 rounded-full">
-                    Demo output — add ANTHROPIC_API_KEY for live generation
+                    Demo output — use your own API key for live generation
                   </span>
                 )}
               </div>

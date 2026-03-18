@@ -7,20 +7,24 @@ export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json() as { repoUrl?: string };
-    const { repoUrl } = body;
+    const body = await req.json() as { repoUrl?: string; apiKey?: string };
+    const { repoUrl, apiKey } = body;
 
     if (!repoUrl || typeof repoUrl !== "string") {
       return NextResponse.json({ error: "repoUrl is required" }, { status: 400 });
     }
 
-    // Graceful fallback: if API key is not configured, return the demo README
-    if (!process.env.ANTHROPIC_API_KEY) {
+    const resolvedKey = (apiKey && typeof apiKey === "string" && apiKey.trim())
+      ? apiKey.trim()
+      : process.env.ANTHROPIC_API_KEY;
+
+    // Graceful fallback: if no API key is available, return the demo README
+    if (!resolvedKey) {
       return NextResponse.json({ readme: DEMO_README, demo: true });
     }
 
     const context = await fetchRepoContext(repoUrl);
-    const readme = await generateReadme(context);
+    const readme = await generateReadme(context, resolvedKey);
 
     return NextResponse.json({ readme });
   } catch (err) {

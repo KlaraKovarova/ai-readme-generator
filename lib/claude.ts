@@ -1,7 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 
-function getClient() {
-  return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+function getClient(apiKey?: string) {
+  return new Anthropic({ apiKey: apiKey ?? process.env.ANTHROPIC_API_KEY });
 }
 
 const SYSTEM_PROMPT = `You are an expert technical writer. Given information about a code repository, generate a professional, well-structured README.md.
@@ -16,8 +16,8 @@ The README must:
 
 Output ONLY the raw markdown content, no preamble.`;
 
-export async function generateReadme(repoContext: string): Promise<string> {
-  const message = await getClient().messages.create({
+export async function generateReadme(repoContext: string, apiKey?: string): Promise<string> {
+  const message = await getClient(apiKey).messages.create({
     model: "claude-haiku-4-5-20251001",
     max_tokens: 4096,
     system: SYSTEM_PROMPT,
