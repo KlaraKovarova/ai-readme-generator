@@ -38,6 +38,32 @@ export default function Home() {
         </div>
         <Generator />
       </div>
+
+      <footer className="border-t border-gray-800 py-8 mt-16 text-center text-xs text-gray-600">
+        <p>
+          Powered by{" "}
+          <a
+            href="https://anthropic.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-indigo-400 hover:text-indigo-300 transition-colors"
+          >
+            Claude AI
+          </a>
+          {" · "}
+          Your data is never stored
+        </p>
+        <div className="mt-3">
+          <a
+            href="https://buymeacoffee.com/aiworks"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-yellow-500 text-gray-900 text-xs font-medium hover:bg-yellow-400 transition-colors"
+          >
+            ☕ Support this project
+          </a>
+        </div>
+      </footer>
     </main>
   );
 }
