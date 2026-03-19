@@ -1,24 +1,12 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getStripe, PRICE_ID } from "@/lib/stripe";
+import { NextResponse } from "next/server";
 
-export async function POST(req: NextRequest) {
-  try {
-    const body = await req.json() as { email?: string };
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
-
-    const session = await getStripe().checkout.sessions.create({
-      mode: "subscription",
-      payment_method_types: ["card"],
-      line_items: [{ price: PRICE_ID, quantity: 1 }],
-      customer_email: body.email,
-      success_url: `${appUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${appUrl}`,
-      metadata: { source: "readme-gen" },
-    });
-
-    return NextResponse.json({ url: session.url });
-  } catch (err) {
-    const message = err instanceof Error ? err.message : "Checkout error";
-    return NextResponse.json({ error: message }, { status: 500 });
+// LemonSqueezy overlay checkout is fully client-side via Lemon.js.
+// This endpoint is kept for compatibility; the real checkout is triggered
+// from the browser using the lemonsqueezy-button class + Lemon.js overlay.
+export async function POST() {
+  const checkoutUrl = process.env.NEXT_PUBLIC_LEMONSQUEEZY_CHECKOUT_URL;
+  if (!checkoutUrl) {
+    return NextResponse.json({ error: "Checkout not configured" }, { status: 503 });
   }
+  return NextResponse.json({ url: checkoutUrl });
 }

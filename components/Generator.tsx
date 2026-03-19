@@ -4,18 +4,25 @@ import { useState, useCallback } from "react";
 import UpgradeModal from "./UpgradeModal";
 import { DEMO_FILE_TREE, DEMO_README, DEMO_REPO_URL } from "@/lib/demo";
 
-const STORAGE_KEY = "readme_gen_usage";
-const FREE_LIMIT = 3;
+const DAILY_KEY = "readme_gen_daily";
+const FREE_LIMIT = 5;
 
 function getUsage(): number {
   if (typeof window === "undefined") return 0;
-  return parseInt(localStorage.getItem(STORAGE_KEY) ?? "0", 10);
+  try {
+    const today = new Date().toISOString().split("T")[0];
+    const stored = JSON.parse(localStorage.getItem(DAILY_KEY) ?? "null") as { count: number; date: string } | null;
+    return stored?.date === today ? stored.count : 0;
+  } catch {
+    return 0;
+  }
 }
 
 function incrementUsage(): number {
-  const next = getUsage() + 1;
-  localStorage.setItem(STORAGE_KEY, String(next));
-  return next;
+  const today = new Date().toISOString().split("T")[0];
+  const count = getUsage() + 1;
+  localStorage.setItem(DAILY_KEY, JSON.stringify({ count, date: today }));
+  return count;
 }
 
 export default function Generator() {
@@ -169,14 +176,14 @@ export default function Generator() {
           </div>
           <p className="text-xs text-gray-600 mt-2">
             {remaining > 0
-              ? `${remaining} free generation${remaining !== 1 ? "s" : ""} remaining`
-              : "Free limit reached — "}
+              ? `${remaining} free generation${remaining !== 1 ? "s" : ""} remaining today`
+              : "Daily free limit reached — "}
             {remaining === 0 && !apiKey.trim() && (
               <button
                 onClick={() => setShowUpgrade(true)}
                 className="text-indigo-400 hover:text-indigo-300 underline underline-offset-2"
               >
-                upgrade for $9/mo
+                upgrade for $5/mo
               </button>
             )}
           </p>
@@ -245,6 +252,47 @@ export default function Generator() {
             />
           </div>
         )}
+
+        {/* Cross-promote other tools */}
+        <div className="border border-gray-800 rounded-2xl p-6 bg-gray-900/50">
+          <p className="text-xs text-gray-500 mb-3 font-medium uppercase tracking-wider">
+            More AI developer tools
+          </p>
+          <div className="flex flex-wrap gap-3">
+            <a
+              href="https://codereview-ai.vercel.app"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-violet-400 hover:text-violet-300 bg-violet-950/50 border border-violet-800/50 px-3 py-1.5 rounded-lg transition-colors"
+            >
+              CodeReview·AI — instant code review
+            </a>
+            <a
+              href="https://testgen-ai.vercel.app"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-emerald-400 hover:text-emerald-300 bg-emerald-950/50 border border-emerald-800/50 px-3 py-1.5 rounded-lg transition-colors"
+            >
+              TestGen·AI — unit test generator
+            </a>
+            <a
+              href="https://commitcraft-ai.vercel.app"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-amber-400 hover:text-amber-300 bg-amber-950/50 border border-amber-800/50 px-3 py-1.5 rounded-lg transition-colors"
+            >
+              CommitCraft·AI — commit message generator
+            </a>
+            <a
+              href="https://envgen-ai.vercel.app"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-cyan-400 hover:text-cyan-300 bg-cyan-950/50 border border-cyan-800/50 px-3 py-1.5 rounded-lg transition-colors"
+            >
+              EnvGen·AI — .env file generator
+            </a>
+          </div>
+        </div>
       </div>
     </>
   );

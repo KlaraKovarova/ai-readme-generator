@@ -4,7 +4,7 @@ import Generator from "@/components/Generator";
 export const metadata: Metadata = {
   title: "ReadmeGen – AI-powered README generator",
   description:
-    "Paste a GitHub URL and get a professional README.md in seconds. Powered by AI. Free for 3 generations.",
+    "Paste a GitHub URL and get a professional README.md in seconds. Powered by AI. 5 free per day.",
   openGraph: {
     title: "ReadmeGen – AI-powered README generator",
     description: "Paste a GitHub URL and get a professional README.md in seconds.",
@@ -20,7 +20,7 @@ export default function Home() {
           <span className="text-lg font-bold text-white">
             Readme<span className="text-indigo-400">Gen</span>
           </span>
-          <span className="text-sm text-gray-500">3 free · $9/mo unlimited</span>
+          <span className="text-sm text-gray-500">5/day free · $5/mo unlimited</span>
         </div>
       </header>
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-16">

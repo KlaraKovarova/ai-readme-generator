@@ -1,30 +1,35 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getStripe } from "@/lib/stripe";
+import { validateWebhookSignature } from "@/lib/lemonsqueezy";
 
 export async function POST(req: NextRequest) {
   const body = await req.text();
-  const sig = req.headers.get("stripe-signature");
+  const signature = req.headers.get("x-signature");
 
-  if (!sig) return NextResponse.json({ error: "Missing signature" }, { status: 400 });
-
-  let event;
-  try {
-    event = getStripe().webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET!);
-  } catch {
+  if (!validateWebhookSignature(body, signature)) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
-  console.log(`Stripe event: ${event.type}`);
-
-  if (event.type === "checkout.session.completed") {
-    const session = event.data.object;
-    console.log(`New subscriber session: ${session.id}`);
-    // TODO: persist subscription status (DB or Stripe customer metadata)
+  let event: { meta: { event_name: string }; data?: unknown };
+  try {
+    event = JSON.parse(body) as { meta: { event_name: string }; data?: unknown };
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  if (event.type === "customer.subscription.deleted") {
-    const sub = event.data.object;
-    console.log(`Subscription cancelled: ${sub.id}`);
+  const eventName = event.meta?.event_name;
+  console.log(`LemonSqueezy event: ${eventName}`);
+
+  if (eventName === "order_created") {
+    console.log("New order:", JSON.stringify(event.data));
+    // TODO: persist subscription status to DB
+  }
+
+  if (eventName === "subscription_created") {
+    console.log("New subscription:", JSON.stringify(event.data));
+  }
+
+  if (eventName === "subscription_cancelled") {
+    console.log("Subscription cancelled:", JSON.stringify(event.data));
   }
 
   return NextResponse.json({ received: true });
